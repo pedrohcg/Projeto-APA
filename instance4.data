@@ -1,0 +1,44 @@
+# Numero de destritos
+37
+
+# Distancia maxima ate UPA mais proxima | Distancia maxima ate segunda UPA mais proxima | Distancia maxima entre 2 UPAs 
+30 60 90
+
+# ID do destrito | latitude | longitude 
+0 -16 -10
+1 -11 -24
+2 -28 -12
+3 15 27
+4 -1 3
+5 -21 16
+6 -19 6
+7 20 6
+8 5 -17
+9 18 22
+10 18 -17
+11 14 -1
+12 -7 2
+13 8 -24
+14 -16 29
+15 4 -3
+16 4 -14
+17 -28 -18
+18 1 -14
+19 13 16
+20 -3 17
+21 15 14
+22 -12 -8
+23 8 -7
+24 17 -23
+25 17 -7
+26 -10 -2
+27 21 15
+28 21 -22
+29 21 -20
+30 -9 -30
+31 28 18
+32 -28 -17
+33 16 -11
+34 16 0
+35 -29 22
+36 -29 -16
