@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
-
 import math
-import sys
+
 
 class District:
     def __init__(self, id = 0, latitude = 0, longitude = 0):
         self.id = id
         self.latitude = latitude
         self.longitude = longitude
+
 
 class Instance:
     def __init__(self, filename):
@@ -67,95 +67,211 @@ def criar_matriz(numero_distritos, distritos):
     return matriz
 
 
-
-def algoritmo_construtivo(matriz, instance):
-    
+def algoritmo_construtivo(**kwargs):
+    matriz = kwargs.get("matriz")
+    instance = kwargs.get("instance")
     distritos_atendidos = set()  # indice dos distritos ja atendidos
     contagem_dist = 0 # número de distritos ja atendidos
-    X = instance.dmax1
-    Y = instance.dmax2
-    num_dist = instance.numeroDistritos
-    upas = []
-
-    while contagem_dist < num_dist - 1:
-        qualquer_nome = { i:{"menorQueX":set(), "menorQueY":set() } for i in range(num_dist) }
-
-        for line in range(num_dist):
-            for column in range(num_dist):
-                if (line in distritos_atendidos) or (column in distritos_atendidos):
-                    continue
-                if line == column:
-                    continue
-                if matriz[line][column] <= X:
-                    qualquer_nome[line]["menorQueX"].add(column)
-                elif matriz[line][column] <= Y:
-                    qualquer_nome[line]["menorQueY"].add(column)
-            
-        # Definir melhor candidato
-        melhor_candidato = 0
-        for i in range(1, len(qualquer_nome)):
-            soma1 = len(qualquer_nome[i]["menorQueX"]) + len(qualquer_nome[i]["menorQueY"])
-            soma2 = len(qualquer_nome[melhor_candidato]["menorQueX"]) + len(qualquer_nome[melhor_candidato]["menorQueY"])
-            if soma1 > soma2:
-                melhor_candidato = i
-
-        # Definir distritos ja atendidos
-        distritos_atendidos.add(melhor_candidato)
-        upas.append(melhor_candidato)
-
-        distritos_atendidos = distritos_atendidos.union(qualquer_nome[melhor_candidato]["menorQueX"])
-        # print(f"MenorQueX para {melhor_candidato}: {qualquer_nome[melhor_candidato]['menorQueX']}")
-        if len(qualquer_nome[melhor_candidato]["menorQueX"]) >= 2:
-            distritos_atendidos = distritos_atendidos.union(qualquer_nome[melhor_candidato]["menorQueY"])
-            # print(f"MenorQueY para {melhor_candidato}: {qualquer_nome[melhor_candidato]['menorQueY']}")
-
-        
-
-        #print(f"distritos atendidos para {melhor_candidato}: {distritos_atendidos}")
-        contagem_dist = len(distritos_atendidos)
-        # print(contagem_dist)
-        # print(f"upas: {upas}")
+    X = instance.dmax1  # Distância máxima até a upa mais próxima
+    Y = instance.dmax2  # Distância máxima até a segunda upa mais próxima
+    num_dist = instance.numeroDistritos 
+    upas = [] # Array que armazena em quais distritos já foi construído uma upa
     
+    dist_atual = 0
+    upas.append(dist_atual) 
+
+    while contagem_dist < num_dist:   
+        dist_atual += 1
+        upas.append(dist_atual)
+
+        for indice_distrito in range(num_dist):
+            count_x = 0
+            count_y = 0
+            for indice_upas in upas:
+                if matriz[indice_distrito][indice_upas] <= X:
+                    count_x += 1
+                elif matriz[indice_distrito][indice_upas] <= Y:
+                    count_y += 1
+
+            if (count_x >= 2) or ((count_x == 1) and (count_y >= 1)):
+                distritos_atendidos.add(indice_distrito)
+        
+        contagem_dist = len(distritos_atendidos)       
     return upas
 
 
+# Printa quem são os distritos que possuem upa construida e quais distritos essa upa atende
+def checar(matriz, upas, instance):
+    num_dist = instance.numeroDistritos
 
-    # while(contagemDist < numDist){
-    #  for(int i =0; i < numDist; i++) {
-    #    for(int j =0; j < numDist; j++) {
-    #      if(i == j){}  
-    #      else if(matriz[i][j] <= X){
-    #        contadorMenorX[i]++;
-    #      } 
-    #      else if(matriz[i][j] <= Y){
-    #         contadorMenorY[i]++;
-    #       }
-    #    }
-    #  }
-    
-    #  maisDistritosAtendidos = 0;
-    
-    #  for(int i = 0; i < numDist; i++){
-    #    if(contadorMenorX[i] >= 1 || contadorMenorY[i] >= 1){
-    #      distritosAtendidos[i] = contadorMenorX[i] + contadorMenorY[i];
-    #    }
-    #    if(maisDistritosAtendidos > distritosAtendidos[i]){
-    #       maisDistritosAtendidos = distritosAtendidos[i];
-    #    }
-    #  }
-    
-    #  contagemDist += maisDistritosAtendidos;
-    # }
+    for i in upas:
+        count = 0
+        distritos = []
+        for j in range(instance.numeroDistritos):
+            if matriz[i][j] <= instance.dmax2:
+                distritos.append(j)
+                count += 1
+        print(f"distrito {i} possui {count} distritos proximos que estao sendo atendidos pela sua upa")
+        print(f"eles sao {distritos}")
 
 
-instance = Instance("instance1.data")
-matriz_distancias = criar_matriz(instance.numeroDistritos, instance.distritos)
+def print_vizinhos_validos(matriz, instance):
+    for i in range(instance.numeroDistritos):
+        vizinhos = set()
+        for j in range(instance.numeroDistritos):
+            if matriz[i][j] <= instance.dmax2:
+                vizinhos.add(j)
+        print(f"vizinhos validos para o distrito {i} sao: {vizinhos} {len(vizinhos)}")
 
-upas = algoritmo_construtivo(matriz_distancias, instance)
 
-for i in range(len(matriz_distancias[0])):
-    if i in upas:
-        print(f"linha {i}:\n{matriz_distancias[i]}")
+def vizinhanca(**kwargs):
+    upas = kwargs.get("upas")
+    matriz = kwargs.get("matriz")
+    instance = kwargs.get("instance")
 
-# for i in range(len(matriz_distancias[0])):
-#     print(matriz_distancias[i])
+    num_dist = instance.numeroDistritos
+    distritos_atendidos = set()
+    count_dist = 0
+    X = instance.dmax1
+    Y = instance.dmax2
+    upas_vizinhanca = []
+
+    # guarda os vizinhos de cada distrito
+    vizinhos = {i: set() for i in range(num_dist)}
+
+    # obtem listas de vizinhos para cada vértice
+    for distrito in range(num_dist):
+        for vizinho in range(num_dist):
+            if matriz[distrito][vizinho] <= Y:
+                vizinhos[distrito].add(vizinho)
+   
+    melhor_candidato = -1
+
+    # Procura o distrito dentre as upas que possui a maior quantidade de vizinhos
+    for indice_distrito in upas:
+        if melhor_candidato == -1:
+            melhor_candidato = indice_distrito
+            continue
+
+        # armazena o melhor candidato entre os distritos
+        if len(vizinhos[indice_distrito]) > len(vizinhos[melhor_candidato]):
+            melhor_candidato = indice_distrito
+
+    upas_vizinhanca.append(melhor_candidato)
+
+
+    while count_dist < num_dist:
+        vizinhos_utilizados = []
+      
+        # percorre todos os distritos pegando os vizinhos do melhor candidato
+        for distrito in vizinhos[melhor_candidato]:             
+            # se o distrito atual ja tiver sido atendido pula ele
+            if distrito in distritos_atendidos:
+                continue
+            
+            if distrito == melhor_candidato:
+                continue
+
+            # Adicionando a vizinhança
+            if matriz[melhor_candidato][distrito] <= Y:
+                vizinhos_utilizados.append(distrito)
+                   
+        # caso não tenha nenhum vizinho que não esteja sendo atendido e seja menor que y
+        if not vizinhos_utilizados:
+            # print(f"Vizinhos do 19 {vizinhos[melhor_candidato]}")
+            for vizinho in range(num_dist):
+                if vizinho in distritos_atendidos:
+                    continue
+                if matriz[melhor_candidato][vizinho] > Y:
+                    upas_vizinhanca.append(vizinho)
+                    melhor_candidato = vizinho
+                    break
+            continue
+        print(melhor_candidato)
+        # print(f"melhor candidato {melhor_candidato}")
+        print(f"vizinhos utilizados: {vizinhos_utilizados}")
+        melhor_candidato = -1
+        for indice_distrito in vizinhos_utilizados:
+            for distrito_vizinho in range(num_dist):
+                if matriz[indice_distrito][distrito_vizinho] <= Y:
+                    vizinhos[indice_distrito].add(distrito_vizinho)
+                
+            if melhor_candidato == -1:
+                melhor_candidato = indice_distrito
+                continue
+                
+            if len(vizinhos[indice_distrito]) > len(vizinhos[melhor_candidato]):
+                melhor_candidato = indice_distrito
+        
+            
+        # constroi a upa no melhor candidato
+        upas_vizinhanca.append(melhor_candidato)
+
+        # verifica se a legislacao esta sendo atendida
+        for indice_distrito in vizinhos:
+            count_x = 0
+            count_y = 0
+            for distrito_upa in upas_vizinhanca:
+                if matriz[indice_distrito][distrito_upa] <= X:
+                    count_x += 1
+                elif matriz[indice_distrito][distrito_upa] <= Y:
+                    count_y += 1
+
+            if (count_x >= 2) or ((count_x == 1) and (count_y >= 1)):
+                distritos_atendidos.add(indice_distrito) 
+
+        #print(upas_vizinhanca)
+        count_dist = len(distritos_atendidos) 
+
+    return upas_vizinhanca
+
+
+# roda o algoritmo passado com os parametros
+def run_algo(function, **kwargs):
+    return function(**kwargs)
+
+
+def check_solution(solution, matriz, instance):
+    num_dist = instance.numeroDistritos
+    X = instance.dmax1
+    Y = instance.dmax2
+
+    checker = {index: False for index in range(num_dist)}
+
+    for index in range(num_dist):
+        count_x = 0
+        count_y = 0
+        for upa in solution:
+            if matriz[index][upa] <= X:
+                count_x += 1
+            elif matriz[index][upa] <= Y:
+                count_y += 1
+            if (count_x >= 2) or ((count_x == 1) and (count_y >= 1)):
+                checker[index] = True
+
+    if False in checker.values():
+        return False
+
+    return True
+
+
+if __name__ == "__main__":
+    instance = Instance("instance4.data")
+    matriz_distancias = criar_matriz(instance.numeroDistritos, instance.distritos)
+
+    upas1 = run_algo(algoritmo_construtivo, matriz=matriz_distancias, instance=instance)
+    upas2 = run_algo(vizinhanca, upas=upas1, matriz=matriz_distancias, instance=instance)
+
+    print(upas1)
+    print(upas2)
+
+    aaaa = check_solution(upas2, matriz_distancias, instance)
+
+    if(aaaa):
+        print("ta certo")
+    #checar(matriz_distancias, upas, instance)
+
+    #print_vizinhos_validos(matriz_distancias, instance)
+
+    #vizinhanca2(upas, matriz_distancias, instance)
+    #print(upas_vizinhanca)
